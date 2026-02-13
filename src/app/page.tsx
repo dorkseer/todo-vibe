@@ -3,6 +3,7 @@
 import { useTodos } from "@/hooks/useTodos";
 import { TodoInput } from "@/components/TodoInput";
 import { TodoList } from "@/components/TodoList";
+import { WeatherWidget } from "@/components/WeatherWidget";
 
 export default function Home() {
   const { todos, isLoaded, addTodo, toggleTodo, deleteTodo, editTodo } =
@@ -17,27 +18,33 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-xl flex-col px-4 py-16">
-      <header className="mb-10 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Todo Vibe
-        </h1>
-        <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-          {todos.length === 0
-            ? "Start adding your tasks"
-            : `${todos.filter((t) => !t.completed).length} of ${todos.length} remaining`}
-        </p>
-      </header>
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-16 lg:flex-row lg:gap-8">
+      <div className="flex flex-1 flex-col lg:max-w-xl">
+        <header className="mb-10 text-center lg:text-left">
+          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Todo Vibe
+          </h1>
+          <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+            {todos.length === 0
+              ? "Start adding your tasks"
+              : `${todos.filter((t) => !t.completed).length} of ${todos.length} remaining`}
+          </p>
+        </header>
 
-      <div className="flex flex-col gap-6">
-        <TodoInput onAdd={addTodo} />
-        <TodoList
-          todos={todos}
-          onToggle={toggleTodo}
-          onDelete={deleteTodo}
-          onEdit={editTodo}
-        />
+        <div className="flex flex-col gap-6">
+          <TodoInput onAdd={addTodo} />
+          <TodoList
+            todos={todos}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+            onEdit={editTodo}
+          />
+        </div>
       </div>
+
+      <aside className="mt-10 w-full lg:mt-0 lg:w-80 lg:shrink-0 lg:self-start lg:sticky lg:top-16">
+        <WeatherWidget />
+      </aside>
     </div>
   );
 }
