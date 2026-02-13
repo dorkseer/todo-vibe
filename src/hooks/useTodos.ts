@@ -33,13 +33,15 @@ export function useTodos() {
     }
   }, [todos, isLoaded]);
 
-  const addTodo = useCallback((title: string) => {
+  const addTodo = useCallback((title: string, description?: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
+    const desc = description?.trim();
     setTodos((prev) => [
       {
         id: crypto.randomUUID(),
         title: trimmed,
+        description: desc || undefined,
         completed: false,
         createdAt: Date.now(),
       },
@@ -59,12 +61,13 @@ export function useTodos() {
     setTodos((prev) => prev.filter((todo) => todo.id !== id));
   }, []);
 
-  const editTodo = useCallback((id: string, title: string) => {
+  const editTodo = useCallback((id: string, title: string, description?: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
+    const desc = description?.trim();
     setTodos((prev) =>
       prev.map((todo) =>
-        todo.id === id ? { ...todo, title: trimmed } : todo
+        todo.id === id ? { ...todo, title: trimmed, description: desc || undefined } : todo
       )
     );
   }, []);
