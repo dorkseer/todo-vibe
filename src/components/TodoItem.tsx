@@ -24,11 +24,28 @@ function formatDate(timestamp: number) {
   return { dateLine, timeLine };
 }
 
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+function formatTimeSince(createdAt: number, now: number) {
+  const elapsed = Math.max(0, now - createdAt);
+  const totalMinutes = Math.floor(elapsed / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  return `${days}d, ${hours}h, ${minutes}m since started`;
+}
+
 export function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
   const [editDescription, setEditDescription] = useState(todo.description ?? "");
+  const [now, setNow] = useState(Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (isEditing) {
@@ -117,6 +134,15 @@ export function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemProps) {
         <div className="mt-0.5 text-right text-xs leading-tight text-zinc-400 dark:text-zinc-500">
           <div>{dateLine}</div>
           <div>{timeLine}</div>
+          <div
+            className={`mt-1 ${
+              now - todo.createdAt >= THREE_DAYS_MS
+                ? "text-red-500 dark:text-red-400"
+                : ""
+            }`}
+          >
+            {formatTimeSince(todo.createdAt, now)}
+          </div>
         </div>
 
         {isEditing ? (
