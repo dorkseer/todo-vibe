@@ -1,6 +1,6 @@
-"use client";
-
 import { useState, useEffect, useCallback, useRef } from "react";
+import { Platform } from "react-native";
+import * as Location from "expo-location";
 import { Coordinates, WeatherData, WeatherError } from "@/types/weather";
 
 const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
@@ -13,6 +13,16 @@ export function useWeather() {
 
   const fetchWeather = useCallback(async (coords: Coordinates) => {
     try {
+      // On web, use the API route; on native, API routes aren't available
+      if (Platform.OS !== "web") {
+        setError({
+          message: "Weather is currently available on web only.",
+          code: "API_ERROR",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const res = await fetch(
         `/api/weather?lat=${coords.lat}&lon=${coords.lon}`
       );
@@ -39,40 +49,35 @@ export function useWeather() {
   }, []);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError({
-        message: "Geolocation is not supported by your browser.",
-        code: "GEOLOCATION_UNAVAILABLE",
-      });
-      setIsLoading(false);
-      return;
-    }
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setError({
+            message: "Location access was denied. Enable it in your settings.",
+            code: "GEOLOCATION_DENIED",
+          });
+          setIsLoading(false);
+          return;
+        }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
         const coords: Coordinates = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
+          lat: location.coords.latitude,
+          lon: location.coords.longitude,
         };
         coordsRef.current = coords;
         fetchWeather(coords);
-      },
-      (err) => {
-        const code =
-          err.code === err.PERMISSION_DENIED
-            ? "GEOLOCATION_DENIED"
-            : "GEOLOCATION_UNAVAILABLE";
+      } catch {
         setError({
-          message:
-            code === "GEOLOCATION_DENIED"
-              ? "Location access was denied. Enable it in your browser settings."
-              : "Unable to determine your location.",
-          code,
+          message: "Unable to determine your location.",
+          code: "GEOLOCATION_UNAVAILABLE",
         });
         setIsLoading(false);
-      },
-      { timeout: 10000 }
-    );
+      }
+    })();
   }, [fetchWeather]);
 
   // Auto-refresh

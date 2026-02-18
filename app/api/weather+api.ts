@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import {
   WeatherData,
   CurrentWeather,
@@ -73,7 +72,6 @@ function normalizeDaily(list: OWMForecastEntry[]): DailyForecast[] {
     day.lows.push(entry.main.temp_min);
   }
 
-  // Skip today (first key), take next 5 days
   const days = Array.from(dayMap.values()).slice(1, 6);
 
   return days.map((day) => ({
@@ -85,8 +83,8 @@ function normalizeDaily(list: OWMForecastEntry[]): DailyForecast[] {
   }));
 }
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
   const lat = searchParams.get("lat");
   const lon = searchParams.get("lon");
 

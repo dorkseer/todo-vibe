@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Todo Vibe",
+    "slug": "todo-vibe",
+    "version": "1.0.0",
+    "scheme": "todo-vibe",
+    "userInterfaceStyle": "automatic",
+    "web": {
+      "bundler": "metro",
+      "output": "server"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Todo Vibe to access your location for weather data."
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.todovibe.app"
+    },
+    "android": {
+      "package": "com.todovibe.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    }
+  }
+}

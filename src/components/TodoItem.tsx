@@ -1,7 +1,11 @@
-"use client";
-
 import { useState, useRef, useEffect } from "react";
+import { View, Text, Pressable, TextInput } from "react-native";
 import { Todo } from "@/types/todo";
+import { CheckIcon } from "./icons/CheckIcon";
+import { EditIcon } from "./icons/EditIcon";
+import { TrashIcon } from "./icons/TrashIcon";
+import { ConfirmIcon } from "./icons/ConfirmIcon";
+import { DiscardIcon } from "./icons/DiscardIcon";
 
 interface TodoItemProps {
   todo: Todo;
@@ -40,7 +44,7 @@ export function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemProps) {
   const [editTitle, setEditTitle] = useState(todo.title);
   const [editDescription, setEditDescription] = useState(todo.description ?? "");
   const [now, setNow] = useState(Date.now());
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
@@ -49,8 +53,7 @@ export function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemProps) {
 
   useEffect(() => {
     if (isEditing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isEditing]);
 
@@ -72,127 +75,124 @@ export function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemProps) {
   }
 
   const { dateLine, timeLine } = formatDate(todo.createdAt);
+  const isOverdue = now - todo.createdAt >= THREE_DAYS_MS;
 
   return (
-    <li className="group flex items-start gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-3 transition-colors hover:border-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-      <button
-        onClick={() => onToggle(todo.id)}
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+    <View className="flex flex-row items-start gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+      {/* Checkbox */}
+      <Pressable
+        onPress={() => onToggle(todo.id)}
+        className={`mt-0.5 h-5 w-5 items-center justify-center rounded-md border-2 ${
           todo.completed
             ? "border-zinc-400 bg-zinc-400 dark:border-zinc-500 dark:bg-zinc-500"
-            : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500"
+            : "border-zinc-300 dark:border-zinc-600"
         }`}
-        aria-label={todo.completed ? "Mark as incomplete" : "Mark as complete"}
+        accessibilityLabel={todo.completed ? "Mark as incomplete" : "Mark as complete"}
       >
-        {todo.completed && (
-          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-      </button>
+        {todo.completed && <CheckIcon size={12} color="#fff" />}
+      </Pressable>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+      {/* Content */}
+      <View className="min-w-0 flex-1 gap-1">
         {isEditing ? (
           <>
-            <input
+            <TextInput
               ref={inputRef}
-              type="text"
               value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="rounded-lg border border-zinc-300 bg-transparent px-2 py-1 text-base outline-none focus:border-zinc-400 dark:border-zinc-600 dark:focus:border-zinc-500"
+              onChangeText={setEditTitle}
+              onSubmitEditing={handleSave}
+              className="rounded-lg border border-zinc-300 px-2 py-1 text-base text-zinc-900 dark:border-zinc-600 dark:text-zinc-100"
             />
-            <textarea
+            <TextInput
               value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
+              onChangeText={setEditDescription}
               placeholder="Add a description (optional)"
-              rows={2}
-              className="rounded-lg border border-zinc-300 bg-transparent px-2 py-1 text-sm outline-none focus:border-zinc-400 dark:border-zinc-600 dark:focus:border-zinc-500"
+              placeholderTextColor="#a1a1aa"
+              multiline
+              numberOfLines={2}
+              className="rounded-lg border border-zinc-300 px-2 py-1 text-sm text-zinc-900 dark:border-zinc-600 dark:text-zinc-100"
             />
           </>
         ) : (
           <>
-            <span
-              onDoubleClick={() => setIsEditing(true)}
-              className={`cursor-default text-base select-none ${
+            <Text
+              className={`text-base ${
                 todo.completed
                   ? "text-zinc-400 line-through dark:text-zinc-500"
                   : "text-zinc-900 dark:text-zinc-100"
               }`}
             >
               {todo.title}
-            </span>
+            </Text>
             {todo.description && (
-              <p className="whitespace-pre-wrap text-sm text-zinc-500 dark:text-zinc-400">
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                 {todo.description}
-              </p>
+              </Text>
             )}
           </>
         )}
-      </div>
+      </View>
 
-      <div className="flex shrink-0 items-start gap-3">
-        <div className="mt-0.5 text-right text-xs leading-tight text-zinc-400 dark:text-zinc-500">
-          <div>{dateLine}</div>
-          <div>{timeLine}</div>
-          <div
-            className={`mt-1 ${
-              now - todo.createdAt >= THREE_DAYS_MS
+      {/* Right side: date info + action buttons */}
+      <View className="shrink-0 flex-row items-start gap-3">
+        <View className="mt-0.5 items-end">
+          <Text className="text-xs text-zinc-400 dark:text-zinc-500">
+            {dateLine}
+          </Text>
+          <Text className="text-xs text-zinc-400 dark:text-zinc-500">
+            {timeLine}
+          </Text>
+          <Text
+            className={`mt-1 text-xs ${
+              isOverdue
                 ? "text-red-500 dark:text-red-400"
-                : ""
+                : "text-zinc-400 dark:text-zinc-500"
             }`}
           >
             {formatTimeSince(todo.createdAt, now)}
-          </div>
-        </div>
+          </Text>
+        </View>
 
         {isEditing ? (
-          <div className="flex gap-1">
-            <button
-              onClick={handleSave}
-              className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400"
-              aria-label="Confirm edit"
+          <View className="flex-row gap-1">
+            <Pressable
+              onPress={handleSave}
+              className="rounded-lg p-1.5"
+              accessibilityLabel="Confirm edit"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-            <button
-              onClick={handleDiscard}
-              className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
-              aria-label="Discard edit"
+              <ConfirmIcon size={16} color="#22c55e" />
+            </Pressable>
+            <Pressable
+              onPress={handleDiscard}
+              className="rounded-lg p-1.5"
+              accessibilityLabel="Discard edit"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+              <DiscardIcon size={16} color="#ef4444" />
+            </Pressable>
+          </View>
         ) : (
-          <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-            <button
-              onClick={() => {
+          <View className="flex-row gap-1">
+            <Pressable
+              onPress={() => {
                 setEditTitle(todo.title);
                 setEditDescription(todo.description ?? "");
                 setIsEditing(true);
               }}
-              className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-              aria-label="Edit todo"
+              className="rounded-lg p-1.5"
+              accessibilityLabel="Edit todo"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => onDelete(todo.id)}
-              className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
-              aria-label="Delete todo"
+              <EditIcon size={16} color="#a1a1aa" />
+            </Pressable>
+            <Pressable
+              onPress={() => onDelete(todo.id)}
+              className="rounded-lg p-1.5"
+              accessibilityLabel="Delete todo"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
+              <TrashIcon size={16} color="#a1a1aa" />
+            </Pressable>
+          </View>
         )}
-      </div>
-    </li>
+      </View>
+    </View>
   );
 }

@@ -1,35 +1,32 @@
-"use client";
-
 import { useState, useEffect, useCallback } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { randomUUID } from "expo-crypto";
 import { Todo } from "@/types/todo";
 
 const STORAGE_KEY = "todo-vibe-todos";
-
-function loadTodos(): Todo[] {
-  if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-  try {
-    return JSON.parse(stored) as Todo[];
-  } catch {
-    return [];
-  }
-}
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount (avoids SSR hydration mismatch)
+  // Load from AsyncStorage on mount
   useEffect(() => {
-    setTodos(loadTodos());
-    setIsLoaded(true);
+    AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
+      if (stored) {
+        try {
+          setTodos(JSON.parse(stored) as Todo[]);
+        } catch {
+          // ignore corrupt data
+        }
+      }
+      setIsLoaded(true);
+    });
   }, []);
 
-  // Persist to localStorage whenever todos change
+  // Persist to AsyncStorage whenever todos change
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     }
   }, [todos, isLoaded]);
 
@@ -39,7 +36,7 @@ export function useTodos() {
     const desc = description?.trim();
     setTodos((prev) => [
       {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         title: trimmed,
         description: desc || undefined,
         completed: false,

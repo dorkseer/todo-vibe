@@ -1,0 +1,20 @@
+import Svg, { Path } from "react-native-svg";
+
+interface Props {
+  size?: number;
+  color?: string;
+}
+
+export function ConfirmIcon({ size = 16, color = "#a1a1aa" }: Props) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 13l4 4L19 7"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
